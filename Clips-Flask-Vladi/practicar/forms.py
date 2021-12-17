@@ -1,6 +1,7 @@
 from flask_wtf.form import FlaskForm
 from wtforms.fields.simple import BooleanField, PasswordField, SubmitField, StringField
-from wtforms.validators import DataRequired, EqualTo, Length, Email
+from wtforms.validators import DataRequired, EqualTo, Length, Email, ValidationError
+from practicar.models import User 
 
 
 class RegistrationForm(FlaskForm):
@@ -13,6 +14,17 @@ class RegistrationForm(FlaskForm):
     
     #To submit a form
     submit = SubmitField('Sign up')
+    
+    #to validate that the fields are unique
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('That username is taken , choose another one')
+        
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user:
+            raise ValidationError('That email is taken , choose another one')
     
     
 
