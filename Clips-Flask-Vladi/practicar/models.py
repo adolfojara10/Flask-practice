@@ -1,6 +1,7 @@
-from practicar import db, login_manager
+from practicar import db, login_manager, app 
 from datetime import datetime 
 from flask_login import UserMixin
+from itsdangerous import TimedJSONWebSignatureSerializer as serializer
 
 #to get the id of a user. It is a decorator
 @login_manager.user_loader
@@ -19,6 +20,23 @@ class User(db.Model, UserMixin):
     #for the relationship with the class Posts. the backref argument is retrieve the 
     #information from the author. lazy is to load the data from the ddbb
     posts = db.relationship('Post', backref='author', lazy=True)
+    
+    
+    def get_reset_token(self, expires_seconds=1800):
+        s = serializer(app.config['SECRET_KEY'], expires_seconds)
+        return s.dumps({'user_id':self.id}).decode('utf-8')
+    
+    
+    @staticmethod
+    def verify_reset_token(token):
+        s = serializer(app.config['SECRET_KEY'])
+        try:
+           user_id = s.loads(token)['user_id']            
+        except:
+            return None
+        
+        return User.query.get(user_id)
+    
     
     def __repr__(self) -> str:
         return f"User('{self.username}', '{self.email}', '{self.image_file}')"
